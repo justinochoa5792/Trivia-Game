@@ -1,37 +1,38 @@
 import React, { useState, useEffect } from "react";
-import "./App.css";
 import Axios from "axios";
+import FlashcardList from "./FlashcardList";
+import "./App.css";
 
 const App = () => {
-  const [trivia, setTrivia] = useState([]);
-
-  const getQuestions = async () => {
-    const response = await Axios.get("https://opentdb.com/api.php?amount=15");
-    console.log(response.data);
-    setTrivia(response.data.results);
-  };
-  const renderTrivia = () => {
-    return trivia.map((triv) => {
-      return (
-        <ul>
-          <li>{triv.category}</li>
-          <li dangerouslySetInnerHTML={{ __html: triv.question }}></li>
-          <li>A:{triv.incorrect_answers[0]}</li>{" "}
-          <li>B:{triv.incorrect_answers[1]}</li>
-          <li>C:{triv.correct_answer}</li>
-          <li>D:{triv.incorrect_answers[2]}</li>
-        </ul>
-      );
-    });
-  };
+  const [flashcards, setFlashCard] = useState([]);
 
   useEffect(() => {
-    getQuestions();
+    Axios.get("https://opentdb.com/api.php?amount=15").then((response) => {
+      setFlashCard(
+        response.data.results.map((flashcard, index) => {
+          const answer = (
+            <li
+              dangerouslySetInnerHTML={{ __html: flashcard.correct_answer }}
+            ></li>
+          );
+          const options = [...flashcard.incorrect_answers, answer];
+          return {
+            id: `${index}- ${Date.now()}`,
+            question: (
+              <li dangerouslySetInnerHTML={{ __html: flashcard.question }}></li>
+            ),
+            answer: answer,
+            options: options.sort(() => Math.random() - 0.5),
+          };
+        })
+      );
+    });
   }, []);
+
   return (
-    <div className="App">
+    <div className="container">
       <h1>Trivia</h1>
-      {renderTrivia()}
+      <FlashcardList flashcards={flashcards} />
     </div>
   );
 };
